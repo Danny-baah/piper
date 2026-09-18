@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-ink: #0b0d12;
+  --color-surface: #12151d;
+  --color-surface-translucent: rgba(11, 13, 18, 0.82);
+  --color-concrete: #d5d9e0;
+  --color-concrete-light: #f5f6f8;
+  --color-concrete-dark: #1e222b;
+  --color-muted: #8c94a0;
+  --color-accent: #e52423;
+  --color-accent-hover: #c91b1a;
+  --color-white: #ffffff;
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-light: rgba(0, 0, 0, 0.08);
+
+  /* Light Editorial About Section Tokens */
+  --color-about-bg: #f4f2ed;
+  --color-about-ink: #181817;
+  --color-about-muted: #666664;
+  --color-about-border: rgba(24, 24, 23, 0.1);
+
+  --background: var(--color-ink);
+  --foreground: var(--color-white);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--color-ink);
+  --color-surface: var(--color-surface);
+  --color-concrete: var(--color-concrete);
+  --color-concrete-light: var(--color-concrete-light);
+  --color-concrete-dark: var(--color-concrete-dark);
+  --color-muted: var(--color-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-border-subtle: var(--color-border-subtle);
+
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background-color: var(--color-ink);
+  color: var(--color-white);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: var(--color-ink);
+  color: var(--color-white);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: #ffffff;
+}
+
+/* Hide scrollbar for clean architectural look where appropriate */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
