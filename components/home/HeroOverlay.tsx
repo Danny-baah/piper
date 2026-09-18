@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useImperativeHandle, forwardRef, useRef, useState, useEffect } from "react";
+import { ArrowUpRight } from "lucide-react";
 
 export interface HeroOverlayHandle {
   updateProgress: (progress: number) => void;
@@ -10,15 +11,28 @@ interface HeroOverlayProps {
   isReducedMotion?: boolean;
 }
 
+function clamp(val: number, min = 0, max = 1): number {
+  return Math.max(min, Math.min(max, val));
+}
+
 export const HeroOverlay = forwardRef<HeroOverlayHandle, HeroOverlayProps>(
   ({ isReducedMotion }, ref) => {
+    // State 1: Intro Group
     const groupRef = useRef<HTMLDivElement | null>(null);
     const indicatorRef = useRef<HTMLDivElement | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
     const hasScrolledRef = useRef(false);
 
+    // State 2: Final Hero Message
+    const finalStateRef = useRef<HTMLDivElement | null>(null);
+    const finalTagRef = useRef<HTMLDivElement | null>(null);
+    const finalLine1Ref = useRef<HTMLSpanElement | null>(null);
+    const finalLine2Ref = useRef<HTMLSpanElement | null>(null);
+    const finalSubtextRef = useRef<HTMLParagraphElement | null>(null);
+    const finalCtaRef = useRef<HTMLDivElement | null>(null);
+
     useEffect(() => {
-      // Smooth initial reveal on hero load
+      // Smooth initial reveal on hero load for State 1
       const timer = setTimeout(() => {
         setIsLoaded(true);
       }, 120);
@@ -29,118 +43,269 @@ export const HeroOverlay = forwardRef<HeroOverlayHandle, HeroOverlayProps>(
       updateProgress: (progress: number) => {
         if (isReducedMotion) return;
 
+        // ----------------------------------------------------
+        // STATE 1: INTRO COMPOSITION (0% to ~8.5% scroll)
+        // ----------------------------------------------------
         const group = groupRef.current;
-        if (!group) return;
+        if (group) {
+          if (!hasScrolledRef.current && progress > 0) {
+            hasScrolledRef.current = true;
+            group.style.transition = "none";
+            if (indicatorRef.current) {
+              indicatorRef.current.style.transition = "none";
+            }
+          }
 
-        // As soon as user scrolls, disable CSS transitions for 100% fluid scrub
-        if (!hasScrolledRef.current && progress > 0) {
-          hasScrolledRef.current = true;
-          group.style.transition = "none";
-          if (indicatorRef.current) {
-            indicatorRef.current.style.transition = "none";
+          const fadeEnd = 0.085;
+
+          if (progress <= 0.005) {
+            group.style.opacity = "1";
+            group.style.transform = "translate3d(0, 0px, 0)";
+            group.style.filter = "none";
+            group.style.visibility = "visible";
+            group.style.pointerEvents = "auto";
+          } else if (progress < fadeEnd) {
+            const t = progress / fadeEnd;
+            const opacity = Math.max(0, 1 - t);
+            const translateY = -25 * t;
+            const blur = 4 * t;
+
+            group.style.opacity = `${opacity.toFixed(3)}`;
+            group.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
+            group.style.filter = blur > 0.2 ? `blur(${blur.toFixed(1)}px)` : "none";
+            group.style.visibility = opacity <= 0.01 ? "hidden" : "visible";
+            group.style.pointerEvents = opacity > 0.1 ? "auto" : "none";
+          } else {
+            // Completely gone for the rest of the sequence
+            group.style.opacity = "0";
+            group.style.transform = "translate3d(0, -25px, 0)";
+            group.style.filter = "blur(4px)";
+            group.style.visibility = "hidden";
+            group.style.pointerEvents = "none";
           }
         }
 
-        // Text disappears smoothly within the first 5–10% of hero scroll progress
-        // 0% scroll: fully visible
-        // 3%: begins fading
-        // 7%: mostly gone
-        // 9–10%: completely gone (0% opacity, visibility: hidden)
-        const fadeEnd = 0.085;
+        // ----------------------------------------------------
+        // STATE 2: FINAL HERO MESSAGE (~80% to 100% scroll)
+        // ----------------------------------------------------
+        const finalState = finalStateRef.current;
+        if (finalState) {
+          // Reveal starts around 0.80 when construction sequence culminates
+          if (progress < 0.79) {
+            finalState.style.opacity = "0";
+            finalState.style.visibility = "hidden";
+            finalState.style.pointerEvents = "none";
+          } else if (progress <= 0.88) {
+            finalState.style.visibility = "visible";
+            finalState.style.opacity = "1";
 
-        if (progress <= 0.005) {
-          group.style.opacity = "1";
-          group.style.transform = "translate3d(0, 0px, 0)";
-          group.style.filter = "none";
-          group.style.visibility = "visible";
-          group.style.pointerEvents = "auto";
-        } else if (progress < fadeEnd) {
-          const t = progress / fadeEnd;
-          const opacity = Math.max(0, 1 - t);
-          const translateY = -25 * t;
-          const blur = 4 * t;
+            // Tag reveal: 0.79 -> 0.83
+            if (finalTagRef.current) {
+              const tTag = clamp((progress - 0.79) / 0.04);
+              const yTag = 14 * (1 - tTag);
+              finalTagRef.current.style.opacity = `${tTag.toFixed(3)}`;
+              finalTagRef.current.style.transform = `translate3d(0, ${yTag.toFixed(2)}px, 0)`;
+            }
 
-          group.style.opacity = `${opacity.toFixed(3)}`;
-          group.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
-          group.style.filter = blur > 0.2 ? `blur(${blur.toFixed(1)}px)` : "none";
-          group.style.visibility = opacity <= 0.01 ? "hidden" : "visible";
-          group.style.pointerEvents = opacity > 0.1 ? "auto" : "none";
-        } else {
-          // Completely gone for the rest of the scroll journey
-          group.style.opacity = "0";
-          group.style.transform = "translate3d(0, -25px, 0)";
-          group.style.filter = "blur(4px)";
-          group.style.visibility = "hidden";
-          group.style.pointerEvents = "none";
+            // Line 1 reveal ("WAS BLEIBT,"): 0.80 -> 0.845
+            if (finalLine1Ref.current) {
+              const t1 = clamp((progress - 0.8) / 0.045);
+              const y1 = 26 * (1 - t1);
+              finalLine1Ref.current.style.opacity = `${t1.toFixed(3)}`;
+              finalLine1Ref.current.style.transform = `translate3d(0, ${y1.toFixed(2)}px, 0)`;
+            }
+
+            // Line 2 reveal ("BEGINNT HIER."): 0.815 -> 0.86
+            if (finalLine2Ref.current) {
+              const t2 = clamp((progress - 0.815) / 0.045);
+              const y2 = 26 * (1 - t2);
+              finalLine2Ref.current.style.opacity = `${t2.toFixed(3)}`;
+              finalLine2Ref.current.style.transform = `translate3d(0, ${y2.toFixed(2)}px, 0)`;
+            }
+
+            // Subtext reveal: 0.83 -> 0.87
+            if (finalSubtextRef.current) {
+              const tSub = clamp((progress - 0.83) / 0.04);
+              const ySub = 16 * (1 - tSub);
+              finalSubtextRef.current.style.opacity = `${tSub.toFixed(3)}`;
+              finalSubtextRef.current.style.transform = `translate3d(0, ${ySub.toFixed(2)}px, 0)`;
+            }
+
+            // CTA reveal: 0.845 -> 0.88
+            if (finalCtaRef.current) {
+              const tCta = clamp((progress - 0.845) / 0.035);
+              const yCta = 18 * (1 - tCta);
+              finalCtaRef.current.style.opacity = `${tCta.toFixed(3)}`;
+              finalCtaRef.current.style.transform = `translate3d(0, ${yCta.toFixed(2)}px, 0)`;
+              finalCtaRef.current.style.pointerEvents = tCta > 0.6 ? "auto" : "none";
+            }
+          } else {
+            // Held fully visible and stable from 0.88 to 1.00
+            finalState.style.visibility = "visible";
+            finalState.style.opacity = "1";
+            finalState.style.pointerEvents = "auto";
+
+            const elements = [
+              finalTagRef.current,
+              finalLine1Ref.current,
+              finalLine2Ref.current,
+              finalSubtextRef.current,
+              finalCtaRef.current,
+            ];
+            for (const el of elements) {
+              if (el) {
+                el.style.opacity = "1";
+                el.style.transform = "translate3d(0, 0, 0)";
+              }
+            }
+            if (finalCtaRef.current) {
+              finalCtaRef.current.style.pointerEvents = "auto";
+            }
+          }
         }
       },
     }));
 
     return (
-      <div className="absolute inset-0 pointer-events-none z-10 select-none overflow-hidden flex items-center justify-center pt-8 sm:pt-10">
+      <div className="absolute inset-0 pointer-events-none z-10 select-none overflow-hidden">
         {/* Subtle architectural vignette for contrast without obscuring footage */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0b0d12]/75 via-transparent to-[#0b0d12]/45 pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(11,13,18,0.45)_100%)] pointer-events-none" />
 
-        {/* Unified Centered Hero Text Composition */}
-        <div
-          ref={groupRef}
-          className={`relative flex flex-col items-center text-center px-6 max-w-[560px] mx-auto pointer-events-auto will-change-transform ${
-            !hasScrolledRef.current
-              ? "transition-all duration-800 ease-[cubic-bezier(0.16,1,0.3,1)]"
-              : ""
-          }`}
-          style={{
-            opacity: isReducedMotion ? 1 : isLoaded ? 1 : 0,
-            transform: isReducedMotion
-              ? "none"
-              : isLoaded
-              ? "translate3d(0, 0px, 0)"
-              : "translate3d(0, 20px, 0)",
-          }}
-        >
-          {/* SMALL EYEBROW */}
-          <div className="flex items-center gap-2 mb-3 sm:mb-3.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E52423]" />
-            <span className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.2em] font-semibold text-white/80">
-              PIEPER BAUUNTERNEHMEN
-            </span>
-          </div>
-
-          {/* MAIN HEADING (reduced ~22% for restrained elegance) */}
-          <h1 className="text-[clamp(1.65rem,3.1vw,2.55rem)] font-extrabold uppercase tracking-tight text-white leading-[1.08] mb-5 sm:mb-6 drop-shadow-[0_4px_16px_rgba(0,0,0,0.65)]">
-            BAUEN MIT<br />
-            ERFAHRUNG.<br />
-            DENKEN FÜR DIE<br />
-            <span className="text-white/95">ZUKUNFT.</span>
-          </h1>
-
-          {/* SCROLL TO EXPLORE (tightened spacing, refined small instruction) */}
+        {/* ======================================================= */}
+        {/* STATE 1: CENTERED HERO INTRO (Active at 0% scroll)     */}
+        {/* ======================================================= */}
+        <div className="absolute inset-0 flex items-center justify-center pt-8 sm:pt-10 pointer-events-none">
           <div
-            ref={indicatorRef}
-            className={`flex flex-col items-center gap-1 text-white/50 ${
+            ref={groupRef}
+            className={`relative flex flex-col items-center text-center px-6 max-w-[560px] mx-auto pointer-events-auto will-change-transform ${
               !hasScrolledRef.current
-                ? "transition-all duration-900 delay-150 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                ? "transition-all duration-800 ease-[cubic-bezier(0.16,1,0.3,1)]"
                 : ""
             }`}
             style={{
-              opacity: isReducedMotion ? 1 : isLoaded ? 1 : 0,
+              opacity: isReducedMotion ? 0 : isLoaded ? 1 : 0,
               transform: isReducedMotion
                 ? "none"
                 : isLoaded
                 ? "translate3d(0, 0px, 0)"
-                : "translate3d(0, 12px, 0)",
+                : "translate3d(0, 20px, 0)",
+              visibility: isReducedMotion ? "hidden" : "visible",
             }}
           >
-            <span className="text-[9px] sm:text-[10px] font-mono tracking-[0.24em] uppercase font-medium">
-              SCROLLEN ZUM ENTDECKEN
-            </span>
-            <span
-              aria-hidden="true"
-              className="text-xs sm:text-sm text-[#E52423] font-bold select-none"
+            {/* SMALL EYEBROW */}
+            <div className="flex items-center gap-2 mb-3 sm:mb-3.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E52423]" />
+              <span className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.2em] font-semibold text-white/80">
+                PIEPER BAUUNTERNEHMEN
+              </span>
+            </div>
+
+            {/* MAIN HEADING (reduced ~22% for restrained elegance) */}
+            <h1 className="text-[clamp(1.65rem,3.1vw,2.55rem)] font-extrabold uppercase tracking-tight text-white leading-[1.08] mb-5 sm:mb-6 drop-shadow-[0_4px_16px_rgba(0,0,0,0.65)]">
+              BAUEN MIT<br />
+              ERFAHRUNG.<br />
+              DENKEN FÜR DIE<br />
+              <span className="text-white/95">ZUKUNFT.</span>
+            </h1>
+
+            {/* SCROLL TO EXPLORE (tightened spacing, refined small instruction) */}
+            <div
+              ref={indicatorRef}
+              className={`flex flex-col items-center gap-1 text-white/50 ${
+                !hasScrolledRef.current
+                  ? "transition-all duration-900 delay-150 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  : ""
+              }`}
+              style={{
+                opacity: isReducedMotion ? 0 : isLoaded ? 1 : 0,
+                transform: isReducedMotion
+                  ? "none"
+                  : isLoaded
+                  ? "translate3d(0, 0px, 0)"
+                  : "translate3d(0, 12px, 0)",
+              }}
             >
-              ↓
+              <span className="text-[9px] sm:text-[10px] font-mono tracking-[0.24em] uppercase font-medium">
+                SCROLLEN ZUM ENTDECKEN
+              </span>
+              <span
+                aria-hidden="true"
+                className="text-xs sm:text-sm text-[#E52423] font-bold select-none"
+              >
+                ↓
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ======================================================= */}
+        {/* STATE 2: FINAL HERO MESSAGE (80% to 100% scroll)        */}
+        {/* ======================================================= */}
+        <div
+          ref={finalStateRef}
+          className="absolute top-[16vh] sm:top-[18vh] left-[6vw] sm:left-[8vw] right-[6vw] sm:right-[8vw] max-w-[960px] pointer-events-none flex flex-col items-start"
+          style={{
+            opacity: isReducedMotion ? 1 : 0,
+            visibility: isReducedMotion ? "visible" : "hidden",
+            pointerEvents: isReducedMotion ? "auto" : "none",
+          }}
+        >
+          {/* Eyebrow Tag */}
+          <div
+            ref={finalTagRef}
+            className="flex items-center gap-2.5 mb-3 sm:mb-4 will-change-transform"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E52423]" />
+            <p className="text-[11px] sm:text-[13px] font-mono uppercase tracking-[0.18em] font-semibold text-white/80">
+              VOLLENDUNG • LATHEN
+            </p>
+          </div>
+
+          {/* Line-by-Line Architectural Headline */}
+          <h2 className="text-[clamp(2.8rem,6.2vw,5.5rem)] font-extrabold uppercase tracking-tight text-white leading-[0.92] max-w-[900px] mb-4 sm:mb-5">
+            <span className="block overflow-hidden">
+              <span ref={finalLine1Ref} className="block will-change-transform">
+                WAS BLEIBT,
+              </span>
             </span>
+            <span className="block overflow-hidden">
+              <span ref={finalLine2Ref} className="block text-white/95 will-change-transform">
+                BEGINNT HIER.
+              </span>
+            </span>
+          </h2>
+
+          {/* Subtext */}
+          <p
+            ref={finalSubtextRef}
+            className="text-sm sm:text-base text-white/75 font-light tracking-wide max-w-md leading-relaxed mb-8 sm:mb-10 will-change-transform"
+          >
+            Pieper Bauunternehmen
+            <br />
+            Bauen mit Erfahrung. Für die Zukunft.
+          </p>
+
+          {/* Rectangular Premium CTAs */}
+          <div
+            ref={finalCtaRef}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto will-change-transform pointer-events-none"
+          >
+            <a
+              href="#kontakt"
+              className="group relative inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-[#E52423] text-white font-medium text-xs sm:text-sm tracking-[0.16em] uppercase transition-all duration-300 hover:bg-[#c91b1a] hover:shadow-[0_0_20px_rgba(229,36,35,0.35)]"
+            >
+              <span>PROJEKT ANFRAGEN</span>
+              <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </a>
+
+            <a
+              href="#ueber-uns"
+              className="group relative inline-flex items-center justify-center gap-3 px-8 py-3.5 border border-white/30 bg-white/5 backdrop-blur-md text-white font-medium text-xs sm:text-sm tracking-[0.16em] uppercase transition-all duration-300 hover:border-white hover:bg-white/10"
+            >
+              <span>PROJEKTE ENTDECKEN</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white/60 transition-transform duration-300 group-hover:scale-150 group-hover:bg-white" />
+            </a>
           </div>
         </div>
       </div>
