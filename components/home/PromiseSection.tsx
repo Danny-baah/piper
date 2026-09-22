@@ -106,8 +106,8 @@ export const PromiseSection: React.FC = () => {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/assets/promise/promise.webp"
-                alt="Verantwortungsvolles Bauen Pieper Bauunternehmen"
+                src="/assets/57.jpg"
+                alt="Verantwortungsvolles Bauen Pieper Bauunternehmen - Wohnanlage St. Vitus im Grünen"
                 className="w-full h-full object-cover"
                 loading="lazy"
               />

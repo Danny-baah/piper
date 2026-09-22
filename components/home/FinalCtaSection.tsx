@@ -29,7 +29,7 @@ export const FinalCtaSection: React.FC = () => {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/assets/cta/cta-bg.webp"
+          src="/assets/56.jpg"
           alt="Pieper Bauunternehmen Bauprojekt"
           className="w-full h-full object-cover opacity-35"
           loading="lazy"
