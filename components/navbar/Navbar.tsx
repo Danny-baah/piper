@@ -18,13 +18,18 @@ const NAV_LINKS = [
 
 export const Navbar: React.FC<NavbarProps> = () => {
   const [navbarTheme, setNavbarTheme] = useState<"hero" | "light" | "dark">("hero");
+  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const scrolled = scrollY > 10;
+      setIsScrolled(scrolled);
+
       // Hero check (pinned container occupies 450vh)
       const heroThreshold = window.innerHeight * 3.4;
-      if (window.scrollY <= heroThreshold) {
+      if (scrollY <= heroThreshold) {
         setNavbarTheme("hero");
         return;
       }
@@ -56,6 +61,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const isLight = navbarTheme === "light";
   const isDark = navbarTheme === "dark";
 
+  // When scrolling on the hero while the video plays, or on light sections: show black "PIEPER" logo
+  const isBlackLogo = isLight || (isHero && isScrolled);
+
   return (
     <>
       <header
@@ -80,16 +88,16 @@ export const Navbar: React.FC<NavbarProps> = () => {
               src="/assets/logo-white.png"
               alt="Pieper Bauunternehmen"
               className={`absolute inset-0 h-full w-auto object-contain transition-opacity duration-500 ease-out ${
-                isLight ? "opacity-0 pointer-events-none" : "opacity-100"
+                isBlackLogo ? "opacity-0 pointer-events-none" : "opacity-100"
               }`}
             />
-            {/* Dark Logo (For Light Sections) */}
+            {/* Dark Logo (For Light Sections & when scrolling on hero) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/assets/logo-transparent.png"
               alt="Pieper Bauunternehmen"
               className={`absolute inset-0 h-full w-auto object-contain transition-opacity duration-500 ease-out ${
-                isLight ? "opacity-100" : "opacity-0 pointer-events-none"
+                isBlackLogo ? "opacity-100" : "opacity-0 pointer-events-none"
               }`}
             />
           </a>

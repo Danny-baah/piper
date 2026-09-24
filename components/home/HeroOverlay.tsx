@@ -23,6 +23,10 @@ export const HeroOverlay = forwardRef<HeroOverlayHandle, HeroOverlayProps>(
     const [isLoaded, setIsLoaded] = useState(false);
     const hasScrolledRef = useRef(false);
 
+    // Storytelling Milestones during video playback
+    const beat1Ref = useRef<HTMLDivElement | null>(null);
+    const beat2Ref = useRef<HTMLDivElement | null>(null);
+
     // State 2: Final Hero Message
     const finalStateRef = useRef<HTMLDivElement | null>(null);
     const finalTagRef = useRef<HTMLDivElement | null>(null);
@@ -82,6 +86,76 @@ export const HeroOverlay = forwardRef<HeroOverlayHandle, HeroOverlayProps>(
             group.style.filter = "blur(4px)";
             group.style.visibility = "hidden";
             group.style.pointerEvents = "none";
+          }
+        }
+
+        // ----------------------------------------------------
+        // STORY MILESTONE 1 (LEFT): Foundation & Earthworks (0.14 to 0.41)
+        // ----------------------------------------------------
+        const beat1 = beat1Ref.current;
+        if (beat1) {
+          if (progress < 0.13 || progress > 0.42) {
+            beat1.style.opacity = "0";
+            beat1.style.visibility = "hidden";
+            beat1.style.transform = "translate3d(-40px, 0, 0)";
+          } else if (progress >= 0.13 && progress < 0.21) {
+            // Enter smoothly from left
+            const t = clamp((progress - 0.13) / 0.08);
+            const x = -40 * (1 - t);
+            beat1.style.visibility = "visible";
+            beat1.style.opacity = `${t.toFixed(3)}`;
+            beat1.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
+            beat1.style.filter = t < 0.8 ? `blur(${(3 * (1 - t)).toFixed(1)}px)` : "none";
+          } else if (progress >= 0.21 && progress <= 0.33) {
+            // Hold completely stable and readable
+            beat1.style.visibility = "visible";
+            beat1.style.opacity = "1";
+            beat1.style.transform = "translate3d(0, 0, 0)";
+            beat1.style.filter = "none";
+          } else {
+            // Softly drift upward and fade out
+            const t = clamp((progress - 0.33) / 0.09);
+            const y = -24 * t;
+            const op = Math.max(0, 1 - t);
+            beat1.style.visibility = op <= 0.01 ? "hidden" : "visible";
+            beat1.style.opacity = `${op.toFixed(3)}`;
+            beat1.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+            beat1.style.filter = t > 0.3 ? `blur(${(3 * t).toFixed(1)}px)` : "none";
+          }
+        }
+
+        // ----------------------------------------------------
+        // STORY MILESTONE 2 (RIGHT): Rohbau & Superstructure (0.44 to 0.74)
+        // ----------------------------------------------------
+        const beat2 = beat2Ref.current;
+        if (beat2) {
+          if (progress < 0.43 || progress > 0.75) {
+            beat2.style.opacity = "0";
+            beat2.style.visibility = "hidden";
+            beat2.style.transform = "translate3d(40px, 0, 0)";
+          } else if (progress >= 0.43 && progress < 0.52) {
+            // Enter smoothly from right
+            const t = clamp((progress - 0.43) / 0.09);
+            const x = 40 * (1 - t);
+            beat2.style.visibility = "visible";
+            beat2.style.opacity = `${t.toFixed(3)}`;
+            beat2.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
+            beat2.style.filter = t < 0.8 ? `blur(${(3 * (1 - t)).toFixed(1)}px)` : "none";
+          } else if (progress >= 0.52 && progress <= 0.65) {
+            // Hold completely stable and readable
+            beat2.style.visibility = "visible";
+            beat2.style.opacity = "1";
+            beat2.style.transform = "translate3d(0, 0, 0)";
+            beat2.style.filter = "none";
+          } else {
+            // Softly drift upward and fade out
+            const t = clamp((progress - 0.65) / 0.1);
+            const y = -24 * t;
+            const op = Math.max(0, 1 - t);
+            beat2.style.visibility = op <= 0.01 ? "hidden" : "visible";
+            beat2.style.opacity = `${op.toFixed(3)}`;
+            beat2.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+            beat2.style.filter = t > 0.3 ? `blur(${(3 * t).toFixed(1)}px)` : "none";
           }
         }
 
@@ -240,11 +314,51 @@ export const HeroOverlay = forwardRef<HeroOverlayHandle, HeroOverlayProps>(
         </div>
 
         {/* ======================================================= */}
+        {/* STORY MILESTONE 1: LEFT ALIGNED & VERTICALLY CENTERED   */}
+        {/* ======================================================= */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-[6vw] sm:left-[8vw] pointer-events-none">
+          <div
+            ref={beat1Ref}
+            className="max-w-[560px] will-change-transform"
+            style={{
+              opacity: 0,
+              visibility: "hidden",
+              transform: "translate3d(-40px, 0, 0)",
+            }}
+          >
+            <h2 className="text-[clamp(1.9rem,4.2vw,3.8rem)] font-extrabold uppercase tracking-tight text-white leading-[0.96] drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+              PRÄZISION VOM<br />
+              <span className="text-white/95">ERSTEN SPATENSTICH.</span>
+            </h2>
+          </div>
+        </div>
+
+        {/* ======================================================= */}
+        {/* STORY MILESTONE 2: RIGHT ALIGNED & VERTICALLY CENTERED  */}
+        {/* ======================================================= */}
+        <div className="absolute top-1/2 -translate-y-1/2 right-[6vw] sm:right-[8vw] pointer-events-none">
+          <div
+            ref={beat2Ref}
+            className="max-w-[560px] text-right will-change-transform flex flex-col items-end"
+            style={{
+              opacity: 0,
+              visibility: "hidden",
+              transform: "translate3d(40px, 0, 0)",
+            }}
+          >
+            <h2 className="text-[clamp(1.9rem,4.2vw,3.8rem)] font-extrabold uppercase tracking-tight text-white leading-[0.96] drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+              MASSIVBAU FÜR<br />
+              <span className="text-white/95">GENERATIONEN.</span>
+            </h2>
+          </div>
+        </div>
+
+        {/* ======================================================= */}
         {/* STATE 2: FINAL HERO MESSAGE (80% to 100% scroll)        */}
         {/* ======================================================= */}
         <div
           ref={finalStateRef}
-          className="absolute top-[16vh] sm:top-[18vh] left-[6vw] sm:left-[8vw] right-[6vw] sm:right-[8vw] max-w-[960px] pointer-events-none flex flex-col items-start"
+          className="absolute top-1/2 -translate-y-1/2 sm:top-[18vh] sm:translate-y-0 left-[6vw] sm:left-[8vw] right-[6vw] sm:right-[8vw] max-w-[960px] pointer-events-none flex flex-col items-start"
           style={{
             opacity: isReducedMotion ? 1 : 0,
             visibility: isReducedMotion ? "visible" : "hidden",
